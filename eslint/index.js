@@ -49,7 +49,10 @@ export function basalt(options = {}) {
         "jsdoc/no-types": "off",
         "jsdoc/tag-lines": ["error", "never", { startLines: 1 }],
         // `export {};` is the module marker for empty entry points
-        "unicorn/require-module-specifiers": "off"
+        "unicorn/require-module-specifiers": "off",
+        // Basalt's own API has `find(plugin)` (ctx.find, app.find), which this rule
+        // mistakes for Array#find with a callback reference
+        "unicorn/no-array-callback-reference": "off"
       }
     },
 
@@ -93,6 +96,14 @@ export function basalt(options = {}) {
         "unicorn/no-useless-undefined": "off",
         "unicorn/prevent-abbreviations": "off",
         "sonarjs/no-duplicate-string": "off"
+      }
+    },
+
+    // Type tests assert at compile time (expectTypeOf, @ts-expect-error)
+    {
+      files: ["**/*.test-d.ts"],
+      rules: {
+        "sonarjs/assertions-in-tests": "off"
       }
     },
 
