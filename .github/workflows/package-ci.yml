@@ -1,0 +1,83 @@
+name: Package CI
+
+# Reusable checks for every basalt-js package. Callers keep a thin workflow:
+#
+#   jobs:
+#     ci:
+#       uses: basalt-js/ci/.github/workflows/package-ci.yml@main
+#
+# Required scripts in the caller's package.json: lint, typecheck (via tsc), the test script
+# named by `test-script`, and, when `build` is true, build + validate + size.
+on:
+  workflow_call:
+    inputs:
+      bun-version:
+        description: Bun version to install.
+        type: string
+        default: "1.4.4"
+      typescript-versions:
+        description: JSON array of TypeScript versions for the typecheck matrix. The first entry must match the lockfile.
+        type: string
+        default: '["6.0"]'
+      test-script:
+        description: package.json script that runs the tests.
+        type: string
+        default: test
+      build:
+        description: Run build, package validation and the size gate.
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ inputs.bun-version }}
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+
+  types:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: true
+      matrix:
+        typescript: ${{ fromJSON(inputs.typescript-versions) }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ inputs.bun-version }}
+      - run: bun install --frozen-lockfile
+      - if: matrix.typescript != fromJSON(inputs.typescript-versions)[0]
+        run: bun add --no-save typescript@~${{ matrix.typescript }}
+      - run: bunx tsc --version
+      - run: bunx tsc --noEmit
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ inputs.bun-version }}
+      - run: bun install --frozen-lockfile
+      - run: bun run ${{ inputs.test-script }}
+
+  build:
+    if: inputs.build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ inputs.bun-version }}
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun run validate
+      - run: bun run size

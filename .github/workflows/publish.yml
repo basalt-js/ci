@@ -1,0 +1,29 @@
+name: Release
+
+# Manual for now. To auto-release a patch on every merge, add `push: branches: [main]`
+# and default the release type to patch.
+on:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: Semver bump for this release
+        type: choice
+        required: true
+        options: [patch, minor, major, prerelease]
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    uses: ./.github/workflows/package-release.yml
+    permissions:
+      contents: write
+      id-token: write
+    with:
+      release-type: ${{ inputs.release-type }}
+      release-command: bun bin/release.ts
