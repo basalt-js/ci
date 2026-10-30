@@ -9,7 +9,7 @@
  *   2. runs the package's `check` script, which includes the build (unless --skip-checks);
  *   3. writes the version into package.json in the working tree only (it is never committed);
  *   4. creates and pushes the tag `v<next>`, which claims the version;
- *   5. publishes to npm (dist-tag `next` for prereleases, with provenance when running in CI);
+ *   5. publishes with `bun publish` (dist-tag `next` for prereleases); in CI it uses `npm publish --provenance`;
  *   6. creates a GitHub release with generated notes when the `gh` CLI is available;
  *   7. restores package.json.
  */
@@ -158,9 +158,13 @@ writeFileSync(
 run("git", ["tag", "-a", tag, "-m", tag]);
 run("git", ["push", "origin", tag]);
 
+// Publish with bun. In CI, use npm instead: bun publish can't attach provenance.
 const publishArguments = ["publish", "--access", "public", "--tag", npmTag(next)];
-if (process.env.CI) publishArguments.push("--provenance");
-run("npm", publishArguments);
+if (process.env.CI) {
+  run("npm", [...publishArguments, "--provenance"]);
+} else {
+  run("bun", publishArguments);
+}
 
 // GitHub release, when the gh CLI is available
 if (succeeds("gh", ["--version"])) {

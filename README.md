@@ -24,7 +24,7 @@ Git tags are the source of truth. `basalt-release` performs these steps:
 2. Runs the package's `check` script.
 3. Writes the version into `package.json` in the working tree only. It is never committed.
 4. Creates and pushes `v<next>`.
-5. Runs `npm publish`. Prereleases (`-next.N`) go to the `next` dist-tag.
+5. Publishes with `bun publish` (in CI: `npm publish --provenance`, since bun can't attach provenance). Prereleases (`-next.N`) go to the `next` dist-tag.
 6. Creates a GitHub release.
 
 Run it with `--dry-run` to see the next version without changing anything.
