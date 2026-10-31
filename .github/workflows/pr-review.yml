@@ -12,6 +12,8 @@ name: PR Review
 #     claude:
 #       uses: basalt-js/ci/.github/workflows/pr-review.yml@main
 #       secrets: inherit
+#       with:
+#         model: claude-sonnet-5-5   # optional; defaults to claude-opus-5-5
 #
 # The check is named `claude / review`. It fails when the review rejects the PR. Each run posts
 # a new PR comment starting with `<!-- basalt-review -->`, so the rounds of a review stay
@@ -93,7 +95,7 @@ jobs:
             Answer with the structured output only: the verdict, a two- or three-line summary, and
             the findings. Each finding names the file and line, the problem, and the fix.
           claude_args: |
-            --model ${{ inputs.model }}
+            --model "${{ inputs.model || 'claude-opus-5-5' }}"
             --allowedTools "Read,Glob,Grep,Bash(gh pr view:*),Bash(gh pr diff:*),Bash(git log:*),Bash(git diff:*),Bash(git show:*)"
             --json-schema '{"type":"object","required":["verdict","summary","findings"],"properties":{"verdict":{"type":"string","enum":["approve","reject"]},"summary":{"type":"string"},"findings":{"type":"array","items":{"type":"object","required":["severity","file","issue","fix"],"properties":{"severity":{"type":"string","enum":["blocking","suggestion"]},"file":{"type":"string"},"line":{"type":"integer"},"issue":{"type":"string"},"fix":{"type":"string"}}}}}}'
 
