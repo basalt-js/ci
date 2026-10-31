@@ -13,7 +13,7 @@ Shared tooling for every basalt-js repository. One place for the lint rules, the
 | `basalt-release` (bin) | `basalt-release <patch\|minor\|major\|prerelease> [--dry-run]`. See below. |
 | `.github/workflows/package-ci.yml` | Reusable CI: lint, typecheck matrix, tests, build + validate + size. |
 | `.github/workflows/package-release.yml` | Reusable release job that runs `basalt-release`. |
-| `.github/workflows/pr-review.yml` | Reusable Claude review of a pull request. Its check, `claude / review`, fails when the review rejects. Needs `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY`. Usage is in the file's header. |
+| `.github/workflows/pr-review.yml` | Reusable Claude review of a pull request (Claude Opus 5.5 by default; `model` input to change it). Its check, `claude / review`, fails when the review rejects. Needs `CLAUDE_CODE_OAUTH_TOKEN` or `ANTHROPIC_API_KEY`. Usage is in the file's header. |
 
 Each consuming repo installs the tools themselves as devDependencies: `@biomejs/biome`, `eslint`, `typescript`.
 
