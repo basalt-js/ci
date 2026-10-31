@@ -13,8 +13,9 @@ name: PR Review
 #       uses: basalt-js/ci/.github/workflows/pr-review.yml@main
 #       secrets: inherit
 #
-# The check is named `claude / review`. It fails when the review rejects the PR, and the
-# review itself is posted as a PR comment that starts with `<!-- basalt-review -->`.
+# The check is named `claude / review`. It fails when the review rejects the PR. Each run posts
+# a new PR comment starting with `<!-- basalt-review -->`, so the rounds of a review stay
+# readable; the latest one is the current verdict.
 #
 # Needs CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`) or ANTHROPIC_API_KEY as a secret.
 # It runs with the workflow's own GITHUB_TOKEN rather than the Claude app's token, so it also
@@ -33,13 +34,23 @@ permissions:
 
 jobs:
   review:
-    # Secrets don't reach PRs from forks, so the review can't run there.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # Secrets don't reach PRs from forks, so the review can't run there. Drafts are reviewed
+    # once they are marked ready.
+    if: github.event.pull_request.head.repo.full_name == github.repository && !github.event.pull_request.draft
     runs-on: ubuntu-latest
     concurrency:
       group: pr-review-${{ github.repository }}-${{ github.event.pull_request.number }}
       cancel-in-progress: true
     steps:
+      - name: Check for a Claude token
+        env:
+          HAS_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' || secrets.ANTHROPIC_API_KEY != '' }}
+        run: |
+          if [ "$HAS_TOKEN" != "true" ]; then
+            echo "::error::No Claude token: set CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY, and pass it with 'secrets: inherit'."
+            exit 1
+          fi
+
       - uses: actions/checkout@v6
         with:
           fetch-depth: 0
